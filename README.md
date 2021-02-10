@@ -1,6 +1,8 @@
-# atrea
+# Domoticz plugin ATREA
 Domoticz plugin for Atrea ventilation with heat recuperation
+
 Developed and tested with EC models, probably it will be operate also witch other models.
+
 Free for use.
 
 ---
