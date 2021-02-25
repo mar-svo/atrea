@@ -1,89 +1,102 @@
 # SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR ORGANIZATION
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
+#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2021-02-08 22:04+0100\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-02-25 22:08+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: pygettext.py 1.5\n"
 
-
-#: plugin.py:124
-msgid "Outside temperature"
-msgstr ""
-
-#: plugin.py:125
-msgid "Exhaust air before recuperation"
-msgstr ""
-
-#: plugin.py:126
-msgid "Fresh air after recuperation"
-msgstr ""
-
-#: plugin.py:127
-msgid "Exhaust air after recuperation"
-msgstr ""
-
-#: plugin.py:132
-msgid "Ground heat exchanger"
-msgstr ""
-
-#: plugin.py:133
-msgid "Bypass flap"
-msgstr ""
-
-#: plugin.py:160
+#: plugin.py:160 plugin.py:163
 msgid "Automatic"
 msgstr ""
 
-#: plugin.py:160
-msgid "Manual"
+#: plugin.py:133 plugin.py:132 plugin.py:135
+msgid "Bypass flap"
 msgstr ""
 
-#: plugin.py:160
-msgid "Temporary"
-msgstr ""
-
-#: plugin.py:161 plugin.py:162
-msgid "Off"
-msgstr ""
-
-#: plugin.py:161 plugin.py:162
-msgid "Periodic ventilation"
-msgstr ""
-
-#: plugin.py:161 plugin.py:162
-msgid "Ventilation"
-msgstr ""
-
-#: plugin.py:162
-msgid "Defrosting the recuperator"
-msgstr ""
-
-#: plugin.py:162
-msgid "Rise"
-msgstr ""
-
-#: plugin.py:162
-msgid "Rundown"
-msgstr ""
-
-#: plugin.py:164
-msgid "Ventilation control mode"
-msgstr ""
-
-#: plugin.py:165
-msgid "Current ventilation power"
-msgstr ""
-
-#: plugin.py:167
+#: plugin.py:167 plugin.py:170
 msgid "Current ventilation mode"
 msgstr ""
 
+#: plugin.py:165 plugin.py:168
+msgid "Current ventilation power"
+msgstr ""
+
+#: plugin.py:162 plugin.py:165
+msgid "Defrosting the recuperator"
+msgstr ""
+
+#: plugin.py:127 plugin.py:126 plugin.py:129
+msgid "Exhaust air after recuperation"
+msgstr ""
+
+#: plugin.py:125 plugin.py:124 plugin.py:127
+msgid "Exhaust air before recuperation"
+msgstr ""
+
+#: plugin.py:133 plugin.py:136
+msgid "Filter change"
+msgstr ""
+
+#: plugin.py:325
+msgid "Filter last changed"
+msgstr ""
+
+#: plugin.py:326
+msgid "Filter to change since"
+msgstr ""
+
+#: plugin.py:126 plugin.py:125 plugin.py:128
+msgid "Fresh air after recuperation"
+msgstr ""
+
+#: plugin.py:132 plugin.py:131 plugin.py:134
+msgid "Ground heat exchanger"
+msgstr ""
+
+#: plugin.py:160 plugin.py:163
+msgid "Manual"
+msgstr ""
+
+#: plugin.py:161 plugin.py:162 plugin.py:164 plugin.py:165
+msgid "Off"
+msgstr ""
+
+#: plugin.py:124 plugin.py:123 plugin.py:126
+msgid "Outside temperature"
+msgstr ""
+
+#: plugin.py:161 plugin.py:162 plugin.py:164 plugin.py:165
+msgid "Periodic ventilation"
+msgstr ""
+
+#: plugin.py:162 plugin.py:165
+msgid "Rise"
+msgstr ""
+
+#: plugin.py:162 plugin.py:165
+msgid "Rundown"
+msgstr ""
+
+#: plugin.py:160 plugin.py:163
+msgid "Temporary"
+msgstr ""
+
+#: plugin.py:161 plugin.py:162 plugin.py:164 plugin.py:165
+msgid "Ventilation"
+msgstr ""
+
+#: plugin.py:164 plugin.py:167
+msgid "Ventilation control mode"
+msgstr ""

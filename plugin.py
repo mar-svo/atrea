@@ -20,16 +20,14 @@
 """
 
 import Domoticz
+from datetime import datetime
 import gettext
-import os
 from pyModbusTCP.client import ModbusClient
-import pymodbus
 from pymodbus.constants import Endian
 from pymodbus.payload import BinaryPayloadDecoder
 import re
-import sys
-
-
+import requests
+import xmltodict
 
 class Atrea:
 
@@ -52,14 +50,18 @@ class Atrea:
         self.uD4 = 17
         self.uZVT = 18
         self.uBypass = 19
+        self.uAlarmFilter = 20
 
 
         # CMDs:
-        # pygettext3.8 -d base -o locales/base.pot plugin.py
-        # locales/cs/LC_MESSAGES# msgfmt -o base.mo base
+        #  init: pygettext3.8 -d base -o locales/base.pot plugin.py
+        #  init: locales/cs/LC_MESSAGES# msgfmt -o base.mo base
+        #  update: xgettext -d base --from-code utf-8 -s -j -o locales/base.pot plugin.py
+        #  update: msgmerge --update locales/cs/LC_MESSAGES/base.po locales/base.pot
+        #  update: locales/cs/LC_MESSAGES# msgfmt -o base.mo base
         translate = gettext.translation('base', localedir='plugins/atrea/locales', fallback=True, languages=['cs'])
         translate.install()
-        _ = translate.gettext
+        self._ = translate.gettext
        
 
         if (Parameters["SerialPort"] == "1"):
@@ -121,16 +123,17 @@ class Atrea:
             
         except: Domoticz.Error("Modbus TCP/IP communication error. Check it out!")
                 
-        if self.uTEa not in Devices: Domoticz.Device(Unit=self.uTEa, DeviceID="TEa", Name=_("Outside temperature"), TypeName="Temperature", Used=1).Create()
-        if self.uTEb not in Devices: Domoticz.Device(Unit=self.uTEb, DeviceID="TEb", Name=_("Exhaust air before recuperation"), TypeName="Temperature", Used=1).Create()
-        if self.uTU1 not in Devices: Domoticz.Device(Unit=self.uTU1, DeviceID="TU1", Name=_("Fresh air after recuperation"), TypeName="Temperature", Used=1).Create()
-        if self.uTU2 not in Devices: Domoticz.Device(Unit=self.uTU2, DeviceID="TU2", Name=_("Exhaust air after recuperation"), TypeName="Temperature", Used=1).Create()
+        if self.uTEa not in Devices: Domoticz.Device(Unit=self.uTEa, DeviceID="TEa", Name=self._("Outside temperature"), TypeName="Temperature", Used=1).Create()
+        if self.uTEb not in Devices: Domoticz.Device(Unit=self.uTEb, DeviceID="TEb", Name=self._("Exhaust air before recuperation"), TypeName="Temperature", Used=1).Create()
+        if self.uTU1 not in Devices: Domoticz.Device(Unit=self.uTU1, DeviceID="TU1", Name=self._("Fresh air after recuperation"), TypeName="Temperature", Used=1).Create()
+        if self.uTU2 not in Devices: Domoticz.Device(Unit=self.uTU2, DeviceID="TU2", Name=self._("Exhaust air after recuperation"), TypeName="Temperature", Used=1).Create()
         if self.labelD1 != "" and self.labelD1 != "D1" and self.uD1 not in Devices: Domoticz.Device(Unit=self.uD1, DeviceID="D1", Name=self.labelD1, TypeName="Contact", Used=1).Create()
         if self.labelD2 != "" and self.labelD2 != "D2" and self.uD2 not in Devices: Domoticz.Device(Unit=self.uD2, DeviceID="D2", Name=self.labelD2, TypeName="Contact", Used=1).Create()
         if self.labelD3 != "" and self.labelD3 != "D3" and self.uD3 not in Devices: Domoticz.Device(Unit=self.uD3, DeviceID="D3", Name=self.labelD3, TypeName="Contact", Used=1).Create()
         if self.labelD4 != "" and self.labelD4 != "D4" and self.uD4 not in Devices: Domoticz.Device(Unit=self.uD4, DeviceID="D4", Name=self.labelD4, TypeName="Contact", Used=1).Create()
-        if self.atreaZVT > 0 and self.uZVT not in Devices: Domoticz.Device(Unit=self.uZVT, DeviceID="ZVT", Name=_("Ground heat exchanger"), TypeName="Contact", Used=1).Create()
-        if self.uBypass not in Devices: Domoticz.Device(Unit=self.uBypass, DeviceID="BYPASS", Name=_("Bypass flap"), TypeName="Contact", Used=1).Create()
+        if self.atreaZVT > 0 and self.uZVT not in Devices: Domoticz.Device(Unit=self.uZVT, DeviceID="ZVT", Name=self._("Ground heat exchanger"), TypeName="Contact", Used=1).Create()
+        if self.uBypass not in Devices: Domoticz.Device(Unit=self.uBypass, DeviceID="BYPASS", Name=self._("Bypass flap"), TypeName="Contact", Used=1).Create()
+        if self.uAlarmFilter not in Devices: Domoticz.Device(Unit=self.uAlarmFilter, DeviceID="AlarmFilter", Name=self._("Filter change"), Type=243, Subtype=22, Used=1).Create()
         
         if self.labelIN1 != "" and self.labelIN1 != "IN1" and self.uIN1 not in Devices:
             # H00705 Režim vstupu IN1: 0 = Kontakt, 1 = Analog (0-10V)
@@ -157,15 +160,15 @@ class Atrea:
         o4 = o3 + (self.atreaMaxPower-60) / 8
         o5 = o4 + (self.atreaMaxPower-60) / 4
         self.oPower = {"LevelNames": "0|60|" + str(int(o1)) + "|" + str(int(o2)) + "|" + str(int(o3)) + "|" + str(int(o4)) + "|" + str(int(o5)) + "|" + str(int(self.atreaMaxPower))}
-        self.oControlMode = {"LevelNames": "|" + _("Manual") + "|" + _("Automatic") + "|" + _("Temporary"), "LevelOffHidden": "true", "SelectorStyle": "1"}
-        self.oModeReq = {"LevelNames":  _("Off") + "|" + _("Periodic ventilation") + "|" + _("Ventilation"), "SelectorStyle": "1"}
-        self.oModeCur = {"LevelNames":  _("Off") + "|" + _("Periodic ventilation") + "|" + _("Ventilation") + "|" + self.labelIN1 + "|" + self.labelIN2 + "|" + self.labelD1 + "|" + self.labelD2 + "|" + self.labelD3 + "|" + self.labelD4 + "|" + _("Rise") + "|" + _("Rundown") + "|" + _("Defrosting the recuperator"), "SelectorStyle": "1"}
+        self.oControlMode = {"LevelNames": "|" + self._("Manual") + "|" + self._("Automatic") + "|" + self._("Temporary"), "LevelOffHidden": "true", "SelectorStyle": "1"}
+        self.oModeReq = {"LevelNames":  self._("Off") + "|" + self._("Periodic ventilation") + "|" + self._("Ventilation"), "SelectorStyle": "1"}
+        self.oModeCur = {"LevelNames":  self._("Off") + "|" + self._("Periodic ventilation") + "|" + self._("Ventilation") + "|" + self.labelIN1 + "|" + self.labelIN2 + "|" + self.labelD1 + "|" + self.labelD2 + "|" + self.labelD3 + "|" + self.labelD4 + "|" + self._("Rise") + "|" + self._("Rundown") + "|" + self._("Defrosting the recuperator"), "SelectorStyle": "1"}
 
-        if self.uControlMode not in Devices: Domoticz.Device(Unit=self.uControlMode, DeviceID="ControlMode", Name=_("Ventilation control mode"), Options=self.oControlMode, Type=244, Subtype=62, Switchtype=18, Image=9, Used=1).Create()
-        if self.uPowerCur not in Devices: Domoticz.Device(Unit=self.uPowerCur, DeviceID="PowerCur", Name=_("Current ventilation power"), Options=self.oPower, Type=244, Subtype=62, Switchtype=18, Image=7, Used=1).Create()
-        #if self.uPowerReq not in Devices: Domoticz.Device(Unit=self.uPowerReq, DeviceID="PowerReq", Name=_("Requested ventilation power"), Options=self.oPower, Type=244, Subtype=62, Switchtype=18, Image=7, Used=1).Create()
-        if self.uModeCur not in Devices: Domoticz.Device(Unit=self.uModeCur, DeviceID="ModeCur", Name=_("Current ventilation mode"), Options=self.oModeCur, Image=7, Type=244, Subtype=62, Switchtype=18, Used=1).Create()
-        #if self.uModeReq not in Devices: Domoticz.Device(Unit=self.uModeReq, DeviceID="ModeReq", Name=_("Requested ventilation mode"), Options=self.oModeReq, Image=7, Type=244, Subtype=62, Switchtype=18, Used=1).Create()
+        if self.uControlMode not in Devices: Domoticz.Device(Unit=self.uControlMode, DeviceID="ControlMode", Name=self._("Ventilation control mode"), Options=self.oControlMode, Type=244, Subtype=62, Switchtype=18, Image=9, Used=1).Create()
+        if self.uPowerCur not in Devices: Domoticz.Device(Unit=self.uPowerCur, DeviceID="PowerCur", Name=self._("Current ventilation power"), Options=self.oPower, Type=244, Subtype=62, Switchtype=18, Image=7, Used=1).Create()
+        #if self.uPowerReq not in Devices: Domoticz.Device(Unit=self.uPowerReq, DeviceID="PowerReq", Name=self._("Requested ventilation power"), Options=self.oPower, Type=244, Subtype=62, Switchtype=18, Image=7, Used=1).Create()
+        if self.uModeCur not in Devices: Domoticz.Device(Unit=self.uModeCur, DeviceID="ModeCur", Name=self._("Current ventilation mode"), Options=self.oModeCur, Image=7, Type=244, Subtype=62, Switchtype=18, Used=1).Create()
+        #if self.uModeReq not in Devices: Domoticz.Device(Unit=self.uModeReq, DeviceID="ModeReq", Name=self._("Requested ventilation mode"), Options=self.oModeReq, Image=7, Type=244, Subtype=62, Switchtype=18, Used=1).Create()
         
         return
 
@@ -308,6 +311,22 @@ class Atrea:
         elif (v1000 == 21): Devices[self.uModeCur].Update(1, str(100))
         elif (v1000 == 22): Devices[self.uModeCur].Update(1, str(110))
         
+        # == Filter alarm from XML via HTTP
+        try:
+            bChangedFilter = True
+            timeOfChange = 0
+            xml = xmltodict.parse(requests.get("http://" + str(self.TCP_IP) + "/config/alarms.xml").content)
+            for i in xml['root']['errors']['i']:
+                if int(i['@i']) == 100:
+                    bChangedFilter = int(i['@p']) == 1
+                    timeOfChange = i['@t']
+            dtOfChange = datetime.fromtimestamp(int(timeOfChange))
+
+            if bChangedFilter: Devices[self.uAlarmFilter].Update(1, self._("Filter last changed") + ": " + str(dtOfChange))
+            else: Devices[self.uAlarmFilter].Update(4, self._("Filter to change since") + ": " + str(dtOfChange))
+        except:
+            Domoticz.Error("Failed to get or process XML via HTML to get state of filter alarm.")
+
         return
         
     def onCommand(self, u, Command, Level, Hue):
