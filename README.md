@@ -10,6 +10,9 @@ Free for use.
  - Ventilation control mode
  - Current ventilation power
  - Current ventilation mode
+ - Alarm: Filter change
+ - Heating season
+ - Nightly cooling
  
 **Temperatures:**
  - Outside temperature
@@ -34,6 +37,9 @@ Volně k užívání.
  - Způsob řízení větrání
  - Aktuální výkon větrání
  - Aktuální režim větrání
+ - Alarm: výměna filtru
+ - Topná sezóna
+ - Noční předchlazení
 
 **Teploty:**
  - Venkovní teplota
