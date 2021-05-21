@@ -51,6 +51,8 @@ class Atrea:
         self.uZVT = 18
         self.uBypass = 19
         self.uAlarmFilter = 20
+        self.uHeatingSeason = 21
+        self.uNightlyCooling = 22
 
 
         # CMDs:
@@ -134,6 +136,9 @@ class Atrea:
         if self.atreaZVT > 0 and self.uZVT not in Devices: Domoticz.Device(Unit=self.uZVT, DeviceID="ZVT", Name=self._("Ground heat exchanger"), TypeName="Contact", Used=1).Create()
         if self.uBypass not in Devices: Domoticz.Device(Unit=self.uBypass, DeviceID="BYPASS", Name=self._("Bypass flap"), TypeName="Contact", Used=1).Create()
         if self.uAlarmFilter not in Devices: Domoticz.Device(Unit=self.uAlarmFilter, DeviceID="AlarmFilter", Name=self._("Filter change"), Type=243, Subtype=22, Used=1).Create()
+        if self.uHeatingSeason not in Devices: Domoticz.Device(Unit=self.uHeatingSeason, DeviceID="HeatingSeason", Name=self._("Heating season"), Type=244, Subtype=73, Switchtype=0, Image=10, Used=1).Create()
+        if self.uNightlyCooling not in Devices: Domoticz.Device(Unit=self.uNightlyCooling, DeviceID="NightlyCooling", Name=self._("Nightly cooling"), Type=244, Subtype=73, Switchtype=0, Image=16, Used=1).Create()
+
         
         if self.labelIN1 != "" and self.labelIN1 != "IN1" and self.uIN1 not in Devices:
             # H00705 Režim vstupu IN1: 0 = Kontakt, 1 = Analog (0-10V)
@@ -181,6 +186,8 @@ class Atrea:
         try:
             c207 = BinaryPayloadDecoder.fromRegisters(client.read_coils(207, 1), byteorder=Endian.Big, wordorder=Endian.Big).decode_16bit_int()
             c211 = BinaryPayloadDecoder.fromRegisters(client.read_coils(211, 1), byteorder=Endian.Big, wordorder=Endian.Big).decode_16bit_int()
+            c902 = BinaryPayloadDecoder.fromRegisters(client.read_coils(902, 1), byteorder=Endian.Big, wordorder=Endian.Big).decode_16bit_int()
+            c1200 = BinaryPayloadDecoder.fromRegisters(client.read_coils(1200, 1), byteorder=Endian.Big, wordorder=Endian.Big).decode_16bit_int()
             #Domoticz.Debug("Modbus response: v='" + str(i201) + "'")
         except: Domoticz.Error("Modbus TCP/IP communication error (input registers). Check it out!")
 
@@ -267,6 +274,14 @@ class Atrea:
         # C00211 1 = Bypass flap
         if self.uBypass in Devices: Devices[self.uBypass].Update(int(c211 == 1), "")
         
+        # == Heating season
+        # C01200 1 = heating, 0 = non-heating
+        if self.uHeatingSeason in Devices: Devices[self.uHeatingSeason].Update(int(c1200 == 1), "")
+        
+        # == Nightly Cooling
+        # C00902 0 = recuperation, 1 = cooling
+        if self.uNightlyCooling in Devices: Devices[self.uNightlyCooling].Update(int(c902 == 1), "")
+        
         
         # == ControlMode
         if v1015 == 2 or v1016 == 2: Devices[self.uControlMode].Update(1, str(30))
@@ -343,6 +358,14 @@ class Atrea:
                 elif Level == 30: atreaControlMode = 2
                 client.write_single_register(1015, atreaControlMode)
                 client.write_single_register(1016, atreaControlMode)
+            
+            # == HeatingSeason  : 0 = non-heating, 1 = heating
+            elif (u == self.uHeatingSeason): 
+                client.write_single_coil(1200, int(Command == "On"))
+            
+            # == NightlyCooling  : 0 = recuperation, 1 = cooling
+            elif (u == self.uNightlyCooling): 
+                client.write_single_coil(902, int(Command == "On"))
             
             # == uPowerCur
             # == uPowerReq
