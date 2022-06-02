@@ -328,17 +328,18 @@ class Atrea:
         
         # == Filter alarm from XML via HTTP
         try:
-            bChangedFilter = True
-            timeOfChange = 0
             xml = xmltodict.parse(requests.get("http://" + str(self.TCP_IP) + "/config/alarms.xml").content)
+
+            lastErrTime = 0 # p == 0
+            lastOkTime = 0  # p == 1
             for i in xml['root']['errors']['i']:
                 if int(i['@i']) == 100:
-                    bChangedFilter = int(i['@p']) == 1
-                    timeOfChange = i['@t']
-            dtOfChange = datetime.fromtimestamp(int(timeOfChange))
+                    if int(i['@p']) == 0 and int(i['@t']) > lastErrTime: lastErrTime = int(i['@t'])
+                    elif int(i['@p']) == 1 and int(i['@t']) > lastOkTime: lastOkTime = int(i['@t'])
 
-            if bChangedFilter: Devices[self.uAlarmFilter].Update(1, self._("Filter last changed") + ": " + str(dtOfChange))
-            else: Devices[self.uAlarmFilter].Update(4, self._("Filter to change since") + ": " + str(dtOfChange))
+            if lastOkTime > lastErrTime: Devices[self.uAlarmFilter].Update(1, self._("Filter last changed") + ": " + str(datetime.fromtimestamp(lastOkTime)))
+            else: Devices[self.uAlarmFilter].Update(4, self._("Filter to change since") + ": " + str(datetime.fromtimestamp(lastErrTime)))
+
         except:
             Domoticz.Error("Failed to get or process XML via HTML to get state of filter alarm.")
 
